@@ -40,7 +40,6 @@ namespace Tolitech.CodeGenerator.Logging.File
             catch
             {
             }
-
         }
 
         void WriteLine(string Text)
@@ -74,12 +73,18 @@ namespace Tolitech.CodeGenerator.Logging.File
         {
             // prepare the lengs table
             Lengths["Time"] = 24;
-            Lengths["Host"] = 16;
-            Lengths["User"] = 16;
             Lengths["Level"] = 14;
-            Lengths["EventId"] = 32;
-            Lengths["Category"] = 92;
+            Lengths["EventId"] = 64;
+            Lengths["Category"] = 124;
+            Lengths["MethodName"] = 32;
             Lengths["Scope"] = 64;
+            Lengths["ActionId"] = 64;
+            Lengths["ActionName"] = 184;
+            Lengths["ActivityId"] = 64;
+            Lengths["UserId"] = 64;
+            Lengths["LoginName"] = 64;
+            Lengths["RequestId"] = 64;
+            Lengths["RequestPath"] = 64;
         }
 
         void BeginFile()
@@ -89,12 +94,17 @@ namespace Tolitech.CodeGenerator.Logging.File
 
             StringBuilder SB = new StringBuilder();
             SB.Append(Pad("Time", Lengths["Time"]));
-            SB.Append(Pad("Host", Lengths["Host"]));
-            SB.Append(Pad("User", Lengths["User"]));
             SB.Append(Pad("Level", Lengths["Level"]));
             SB.Append(Pad("EventId", Lengths["EventId"]));
             SB.Append(Pad("Category", Lengths["Category"]));
+            SB.Append(Pad("MethodName", Lengths["MethodName"]));
             SB.Append(Pad("Scope", Lengths["Scope"]));
+            SB.Append(Pad("ActionId", Lengths["ActionId"]));
+            SB.Append(Pad("ActionName", Lengths["ActionName"]));
+            SB.Append(Pad("ActivityId", Lengths["ActivityId"]));
+            SB.Append(Pad("UserId", Lengths["UserId"]));
+            SB.Append(Pad("LoginName", Lengths["LoginName"]));
+            SB.Append(Pad("RequestPath", Lengths["RequestPath"]));
             SB.AppendLine("Text");
 
             System.IO.File.WriteAllText(FilePath, SB.ToString());
@@ -109,17 +119,17 @@ namespace Tolitech.CodeGenerator.Logging.File
             {
                 string S;
                 string P;
+
                 StringBuilder SB = new StringBuilder();
                 SB.Append(Pad(Info.TimeStampUtc.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss.ff"), Lengths["Time"]));
-                SB.Append(Pad(Info.HostName, Lengths["Host"]));
-                SB.Append(Pad(Info.UserName, Lengths["User"]));
                 SB.Append(Pad(Info.Level.ToString(), Lengths["Level"]));
                 SB.Append(Pad(Info.EventId != null ? Info.EventId.ToString() : "", Lengths["EventId"]));
                 SB.Append(Pad(Info.Category, Lengths["Category"]));
+                SB.Append(Pad(Info.MethodName, Lengths["MethodName"]));
 
                 S = "";
                 P = "";
-                
+
                 if (Info.Scopes != null && Info.Scopes.Count > 0)
                 {
                     LogScopeInfo SI = Info.Scopes.Last();
@@ -140,20 +150,14 @@ namespace Tolitech.CodeGenerator.Logging.File
                     }
                 }
                 SB.Append(Pad(S, Lengths["Scope"]));
+                SB.Append(Pad(Info.ActionId, Lengths["ActionId"]));
+                SB.Append(Pad(Info.ActionName, Lengths["ActionName"]));
+                SB.Append(Pad(Info.ActivityId, Lengths["ActivityId"]));
+                SB.Append(Pad(Info.UserId, Lengths["UserId"]));
+                SB.Append(Pad(Info.LoginName, Lengths["LoginName"]));
+                SB.Append(Pad(Info.RequestPath, Lengths["RequestPath"]));
 
                 string Text = Info.Text;
-
-                Text = Text + " Properties = " + P;
-
-                if (Info.StateProperties != null && Info.StateProperties.Count > 0)
-                {
-                    // Text = Text + " Properties = " + Newtonsoft.Json.JsonConvert.SerializeObject(Info.StateProperties);
-                    Text = Text + " State Properties = ";
-                    foreach(var properties in Info.StateProperties)
-                    {
-                        Text = Text + properties.Key + " = " + properties.Value;
-                    }
-                }
 
                 if (!string.IsNullOrWhiteSpace(Text))
                 {
