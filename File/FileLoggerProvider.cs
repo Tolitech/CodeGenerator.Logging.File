@@ -13,14 +13,14 @@ namespace Tolitech.CodeGenerator.Logging.File
     [ProviderAlias("File")]
     public class FileLoggerProvider : LoggerProvider
     {
-        bool Terminated;
-        int Counter = 0;
-        string FilePath;
-        Dictionary<string, int> Lengths = new Dictionary<string, int>();
+        private bool terminated;
+        private int counter = 0;
+        private string filePath;
+        
+        Dictionary<string, int> lengths = new Dictionary<string, int>();
+        ConcurrentQueue<LogEntry> infoQueue = new ConcurrentQueue<LogEntry>();
 
-        ConcurrentQueue<LogEntry> InfoQueue = new ConcurrentQueue<LogEntry>();
-
-        void ApplyRetainPolicy()
+        private void ApplyRetainPolicy()
         {
             FileInfo FI;
             try
@@ -42,23 +42,23 @@ namespace Tolitech.CodeGenerator.Logging.File
             }
         }
 
-        void WriteLine(string Text)
+        private void WriteLine(string Text)
         {
             // check the file size after any 100 writes
-            Counter++;
-            if (Counter % 100 == 0)
+            counter++;
+            if (counter % 100 == 0)
             {
-                FileInfo FI = new FileInfo(FilePath);
+                FileInfo FI = new FileInfo(filePath);
                 if (FI.Length > (1024 * 1024 * Settings.MaxFileSizeInMB))
                 {
                     BeginFile();
                 }
             }
 
-            System.IO.File.AppendAllText(FilePath, Text);
+            System.IO.File.AppendAllText(filePath, Text);
         }
 
-        string Pad(string Text, int MaxLength)
+        private string Pad(string Text, int MaxLength)
         {
             if (string.IsNullOrWhiteSpace(Text))
                 return "".PadRight(MaxLength);
@@ -69,95 +69,81 @@ namespace Tolitech.CodeGenerator.Logging.File
             return Text.PadRight(MaxLength);
         }
 
-        void PrepareLengths()
+        private void PrepareLengths()
         {
             // prepare the lengs table
-            Lengths["Time"] = 24;
-            Lengths["Level"] = 14;
-            Lengths["EventId"] = 64;
-            Lengths["Category"] = 124;
-            Lengths["MethodName"] = 32;
-            Lengths["Scope"] = 64;
-            Lengths["ActionId"] = 64;
-            Lengths["ActionName"] = 184;
-            Lengths["ActivityId"] = 64;
-            Lengths["UserId"] = 64;
-            Lengths["LoginName"] = 64;
-            Lengths["RequestId"] = 64;
-            Lengths["RequestPath"] = 64;
+            lengths["Time"] = 24;
+            lengths["Level"] = 14;
+            lengths["EventId"] = 64;
+            lengths["Category"] = 124;
+            lengths["MethodName"] = 32;
+            lengths["Scope"] = 64;
+            lengths["ActionId"] = 64;
+            lengths["ActionName"] = 184;
+            lengths["ActivityId"] = 64;
+            lengths["UserId"] = 64;
+            lengths["LoginName"] = 64;
+            lengths["RequestId"] = 64;
+            lengths["RequestPath"] = 64;
         }
 
-        void BeginFile()
+        private void BeginFile()
         {
             Directory.CreateDirectory(Settings.Folder);
-            FilePath = Path.Combine(Settings.Folder, LogEntry.StaticHostName + "-" + DateTime.Now.ToString("yyyyMMdd-HHmm") + ".log");
+            filePath = Path.Combine(Settings.Folder, LogEntry.StaticHostName + "-" + DateTime.Now.ToString("yyyyMMdd-HHmm") + ".log");
 
             StringBuilder SB = new StringBuilder();
-            SB.Append(Pad("Time", Lengths["Time"]));
-            SB.Append(Pad("Level", Lengths["Level"]));
-            SB.Append(Pad("EventId", Lengths["EventId"]));
-            SB.Append(Pad("Category", Lengths["Category"]));
-            SB.Append(Pad("MethodName", Lengths["MethodName"]));
-            SB.Append(Pad("Scope", Lengths["Scope"]));
-            SB.Append(Pad("ActionId", Lengths["ActionId"]));
-            SB.Append(Pad("ActionName", Lengths["ActionName"]));
-            SB.Append(Pad("ActivityId", Lengths["ActivityId"]));
-            SB.Append(Pad("UserId", Lengths["UserId"]));
-            SB.Append(Pad("LoginName", Lengths["LoginName"]));
-            SB.Append(Pad("RequestPath", Lengths["RequestPath"]));
+            SB.Append(Pad("Time", lengths["Time"]));
+            SB.Append(Pad("Level", lengths["Level"]));
+            SB.Append(Pad("EventId", lengths["EventId"]));
+            SB.Append(Pad("Category", lengths["Category"]));
+            SB.Append(Pad("MethodName", lengths["MethodName"]));
+            SB.Append(Pad("Scope", lengths["Scope"]));
+            SB.Append(Pad("ActionId", lengths["ActionId"]));
+            SB.Append(Pad("ActionName", lengths["ActionName"]));
+            SB.Append(Pad("ActivityId", lengths["ActivityId"]));
+            SB.Append(Pad("UserId", lengths["UserId"]));
+            SB.Append(Pad("LoginName", lengths["LoginName"]));
+            SB.Append(Pad("RequestPath", lengths["RequestPath"]));
             SB.AppendLine("Text");
 
-            System.IO.File.WriteAllText(FilePath, SB.ToString());
+            System.IO.File.WriteAllText(filePath, SB.ToString());
 
             ApplyRetainPolicy();
         }
 
-        void WriteLogLine()
+        private void WriteLogLine()
         {
-            LogEntry Info = null;
-            if (InfoQueue.TryDequeue(out Info))
+            LogEntry info = null;
+            if (infoQueue.TryDequeue(out info))
             {
-                string S;
-                string P;
+                string scope = "";
 
                 StringBuilder SB = new StringBuilder();
-                SB.Append(Pad(Info.TimeStampUtc.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss.ff"), Lengths["Time"]));
-                SB.Append(Pad(Info.Level.ToString(), Lengths["Level"]));
-                SB.Append(Pad(Info.EventId != null ? Info.EventId.ToString() : "", Lengths["EventId"]));
-                SB.Append(Pad(Info.Category, Lengths["Category"]));
-                SB.Append(Pad(Info.MethodName, Lengths["MethodName"]));
+                SB.Append(Pad(info.TimeStampUtc.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss.ff"), lengths["Time"]));
+                SB.Append(Pad(info.Level.ToString(), lengths["Level"]));
+                SB.Append(Pad(info.EventId != null ? info.EventId.ToString() : "", lengths["EventId"]));
+                SB.Append(Pad(info.Category, lengths["Category"]));
+                SB.Append(Pad(info.MethodName, lengths["MethodName"]));
 
-                S = "";
-                P = "";
-
-                if (Info.Scopes != null && Info.Scopes.Count > 0)
+                if (info.Scopes != null && info.Scopes.Count > 0)
                 {
-                    LogScopeInfo SI = Info.Scopes.Last();
+                    LogScopeInfo SI = info.Scopes.Last();
                     if (!string.IsNullOrWhiteSpace(SI.Text))
                     {
-                        S = SI.Text;
-                    }
-
-                    if (SI.Properties != null)
-                    {
-                        foreach (var properties in SI.Properties)
-                        {
-                            if (!string.IsNullOrEmpty(P))
-                                P += " | ";
-
-                            P += properties.Key + " = " + properties.Value;
-                        }
+                        scope = SI.Text;
                     }
                 }
-                SB.Append(Pad(S, Lengths["Scope"]));
-                SB.Append(Pad(Info.ActionId, Lengths["ActionId"]));
-                SB.Append(Pad(Info.ActionName, Lengths["ActionName"]));
-                SB.Append(Pad(Info.ActivityId, Lengths["ActivityId"]));
-                SB.Append(Pad(Info.UserId, Lengths["UserId"]));
-                SB.Append(Pad(Info.LoginName, Lengths["LoginName"]));
-                SB.Append(Pad(Info.RequestPath, Lengths["RequestPath"]));
 
-                string Text = Info.Text;
+                SB.Append(Pad(scope, lengths["Scope"]));
+                SB.Append(Pad(info.ActionId, lengths["ActionId"]));
+                SB.Append(Pad(info.ActionName, lengths["ActionName"]));
+                SB.Append(Pad(info.ActivityId, lengths["ActivityId"]));
+                SB.Append(Pad(info.UserId, lengths["UserId"]));
+                SB.Append(Pad(info.LoginName, lengths["LoginName"]));
+                SB.Append(Pad(info.RequestPath, lengths["RequestPath"]));
+
+                string Text = info.Text;
 
                 if (!string.IsNullOrWhiteSpace(Text))
                 {
@@ -169,11 +155,11 @@ namespace Tolitech.CodeGenerator.Logging.File
             }
         }
 
-        void ThreadProc()
+        private void ThreadProc()
         {
             Task.Run(() => {
 
-                while (!Terminated)
+                while (!terminated)
                 {
                     try
                     {
@@ -187,7 +173,7 @@ namespace Tolitech.CodeGenerator.Logging.File
 
         protected override void Dispose(bool disposing)
         {
-            Terminated = true;
+            terminated = true;
             base.Dispose(disposing);
         }
 
@@ -215,7 +201,7 @@ namespace Tolitech.CodeGenerator.Logging.File
 
         public override void WriteLog(LogEntry Info)
         {
-            InfoQueue.Enqueue(Info);
+            infoQueue.Enqueue(Info);
         }
 
         internal FileLoggerOptions Settings { get; private set; }

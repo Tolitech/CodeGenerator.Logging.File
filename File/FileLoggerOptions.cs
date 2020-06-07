@@ -21,12 +21,14 @@ namespace Tolitech.CodeGenerator.Logging.File
         public int MaxFileSizeInMB
         {
             get { return fMaxFileSizeInMB > 0 ? fMaxFileSizeInMB : 2; }
+
             set { fMaxFileSizeInMB = value; }
         }
 
         public int RetainPolicyFileCount
         {
             get { return fRetainPolicyFileCount < 5 ? 5 : fRetainPolicyFileCount; }
+
             set { fRetainPolicyFileCount = value; }
         }
     }
