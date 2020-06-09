@@ -76,7 +76,6 @@ namespace Tolitech.CodeGenerator.Logging.File
             lengths["Level"] = 14;
             lengths["EventId"] = 64;
             lengths["Category"] = 124;
-            lengths["MethodName"] = 32;
             lengths["Scope"] = 64;
             lengths["ActionId"] = 64;
             lengths["ActionName"] = 184;
@@ -97,7 +96,6 @@ namespace Tolitech.CodeGenerator.Logging.File
             SB.Append(Pad("Level", lengths["Level"]));
             SB.Append(Pad("EventId", lengths["EventId"]));
             SB.Append(Pad("Category", lengths["Category"]));
-            SB.Append(Pad("MethodName", lengths["MethodName"]));
             SB.Append(Pad("Scope", lengths["Scope"]));
             SB.Append(Pad("ActionId", lengths["ActionId"]));
             SB.Append(Pad("ActionName", lengths["ActionName"]));
@@ -124,7 +122,6 @@ namespace Tolitech.CodeGenerator.Logging.File
                 SB.Append(Pad(info.Level.ToString(), lengths["Level"]));
                 SB.Append(Pad(info.EventId != null ? info.EventId.ToString() : "", lengths["EventId"]));
                 SB.Append(Pad(info.Category, lengths["Category"]));
-                SB.Append(Pad(info.MethodName, lengths["MethodName"]));
 
                 if (info.Scopes != null && info.Scopes.Count > 0)
                 {
