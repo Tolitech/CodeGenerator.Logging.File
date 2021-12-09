@@ -5,16 +5,16 @@ namespace Tolitech.CodeGenerator.Logging.File
 {
     public class FileLoggerOptions
     {
-        string fFolder;
-        int fMaxFileSizeInMB;
-        int fRetainPolicyFileCount;
+        private string? fFolder;
+        private int fMaxFileSizeInMB;
+        private int fRetainPolicyFileCount;
 
         public LogLevel LogLevel { get; set; } = LogLevel.Information;
 
-        public string Folder
+        public string? Folder
         {
-            get { return !string.IsNullOrWhiteSpace(fFolder) ? fFolder : System.IO.Path.GetDirectoryName(this.GetType().Assembly.Location); }
-            
+            get { return !string.IsNullOrWhiteSpace(fFolder) ? fFolder : Path.GetDirectoryName(this.GetType().Assembly.Location); }
+
             set { fFolder = value; }
         }
 
