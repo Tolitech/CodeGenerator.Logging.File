@@ -12,7 +12,7 @@ Examples:
 public LoggingFileTest()
 {
 	var config = new ConfigurationBuilder()
-		.SetBasePath(Directory.GetCurrentDirectory())
+    .SetBasePath(Directory.GetCurrentDirectory())
 		.AddJsonFile("appsettings.json", false, true)
 		.Build();
 
@@ -23,10 +23,9 @@ public LoggingFileTest()
 		logger
 			.AddConfiguration(config.GetSection("Logging"))
 			.AddFileLogger(x => 
-                {
-					x.LogLevel = logLevel;
-                }
-            );
+      {
+        x.LogLevel = logLevel;
+      });
 	});
 			
 	_logger = loggerFactory.CreateLogger<LoggingFileTest>();
