@@ -8,7 +8,7 @@ namespace Tolitech.CodeGenerator.Logging.File
     {
         public FileLoggerOptionsSetup(ILoggerProviderConfiguration<FileLoggerProvider> providerConfiguration) : base(providerConfiguration.Configuration)
         {
-
+            
         }
     }
 }

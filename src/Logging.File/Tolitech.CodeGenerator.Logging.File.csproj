@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <Version>1.0.3-alpha-1</Version>
+    <Authors>Tolitech</Authors>
+    <Description>Logging file library for Tolitech Code Generator.</Description>
+    <PackageProjectUrl>https://www.tolitech.com.br</PackageProjectUrl>
+    <PackageIcon>icon.png</PackageIcon>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <RepositoryUrl>https://github.com/tolitech/logging.file</RepositoryUrl>
+    <RepositoryType>github</RepositoryType>
+    <PackageTags>logging;logging-file</PackageTags>
+    <PackageReleaseNotes>More information at http://www.tolitech.com.br</PackageReleaseNotes>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\..\..\..\icon.png">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+    <None Include="..\..\README.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Tolitech.CodeGenerator.Logging" Version="1.0.3-alpha-2" />
+  </ItemGroup>
+
+</Project>

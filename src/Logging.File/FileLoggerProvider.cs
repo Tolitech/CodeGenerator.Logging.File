@@ -1,10 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -15,20 +11,23 @@ namespace Tolitech.CodeGenerator.Logging.File
     {
         private bool terminated;
         private int counter = 0;
-        private string filePath;
-        
-        Dictionary<string, int> lengths = new Dictionary<string, int>();
-        ConcurrentQueue<LogEntry> infoQueue = new ConcurrentQueue<LogEntry>();
+        private string? filePath;
+
+        readonly Dictionary<string, int> lengths = new();
+        readonly ConcurrentQueue<LogEntry> infoQueue = new();
 
         private void ApplyRetainPolicy()
         {
             FileInfo FI;
             try
             {
+                if (string.IsNullOrEmpty(Settings.Folder))
+                    return;
+
                 List<FileInfo> FileList = new DirectoryInfo(Settings.Folder)
-                .GetFiles("*.log", SearchOption.TopDirectoryOnly)
-                .OrderBy(fi => fi.CreationTime)
-                .ToList();
+                    .GetFiles("*.log", SearchOption.TopDirectoryOnly)
+                    .OrderBy(fi => fi.CreationTime)
+                    .ToList();
 
                 while (FileList.Count >= Settings.RetainPolicyFileCount)
                 {
@@ -44,11 +43,14 @@ namespace Tolitech.CodeGenerator.Logging.File
 
         private void WriteLine(string Text)
         {
+            if (string.IsNullOrEmpty(filePath))
+                return;
+
             // check the file size after any 100 writes
             counter++;
             if (counter % 100 == 0)
             {
-                FileInfo FI = new FileInfo(filePath);
+                FileInfo FI = new(filePath);
                 if (FI.Length > (1024 * 1024 * Settings.MaxFileSizeInMB))
                 {
                     BeginFile();
@@ -58,13 +60,13 @@ namespace Tolitech.CodeGenerator.Logging.File
             System.IO.File.AppendAllText(filePath, Text);
         }
 
-        private string Pad(string Text, int MaxLength)
+        private string Pad(string? Text, int MaxLength)
         {
             if (string.IsNullOrWhiteSpace(Text))
                 return "".PadRight(MaxLength);
 
             if (Text.Length > MaxLength)
-                return Text.Substring(0, MaxLength);
+                return Text[..MaxLength];
 
             return Text.PadRight(MaxLength);
         }
@@ -88,10 +90,13 @@ namespace Tolitech.CodeGenerator.Logging.File
 
         private void BeginFile()
         {
-            Directory.CreateDirectory(Settings.Folder);
-            filePath = Path.Combine(Settings.Folder, LogEntry.StaticHostName + "-" + DateTime.Now.ToString("yyyyMMdd-HHmm") + ".log");
+            if (string.IsNullOrEmpty(Settings.Folder))
+                return;
 
-            StringBuilder SB = new StringBuilder();
+            Directory.CreateDirectory(Settings.Folder);
+            filePath = Path.Combine(Settings.Folder, LogEntry.HostName + "-" + DateTime.Now.ToString("yyyyMMdd-HHmm") + ".log");
+
+            StringBuilder SB = new();
             SB.Append(Pad("Time", lengths["Time"]));
             SB.Append(Pad("Level", lengths["Level"]));
             SB.Append(Pad("EventId", lengths["EventId"]));
@@ -112,12 +117,11 @@ namespace Tolitech.CodeGenerator.Logging.File
 
         private void WriteLogLine()
         {
-            LogEntry info = null;
-            if (infoQueue.TryDequeue(out info))
+            if (infoQueue.TryDequeue(out LogEntry? info))
             {
                 string scope = "";
 
-                StringBuilder SB = new StringBuilder();
+                StringBuilder SB = new();
                 SB.Append(Pad(info.TimeStampUtc.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss.ff"), lengths["Time"]));
                 SB.Append(Pad(info.Level.ToString(), lengths["Level"]));
                 SB.Append(Pad(info.EventId != null ? info.EventId.ToString() : "", lengths["EventId"]));
@@ -140,7 +144,7 @@ namespace Tolitech.CodeGenerator.Logging.File
                 SB.Append(Pad(info.LoginName, lengths["LoginName"]));
                 SB.Append(Pad(info.RequestPath, lengths["RequestPath"]));
 
-                string Text = info.Text;
+                string? Text = info.Text;
 
                 if (!string.IsNullOrWhiteSpace(Text))
                 {
@@ -161,7 +165,7 @@ namespace Tolitech.CodeGenerator.Logging.File
                     try
                     {
                         WriteLogLine();
-                        System.Threading.Thread.Sleep(100);
+                        Thread.Sleep(100);
                     }
                     catch { }
                 }
