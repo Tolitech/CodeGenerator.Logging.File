@@ -11,25 +11,24 @@ Examples:
 // Constructor
 public LoggingFileTest()
 {
-	var config = new ConfigurationBuilder()
-		.SetBasePath(Directory.GetCurrentDirectory())
-		.AddJsonFile("appsettings.json", false, true)
-		.Build();
+    var config = new ConfigurationBuilder()
+        .SetBasePath(Directory.GetCurrentDirectory())
+        .AddJsonFile("appsettings.json", false, true)
+        .Build();
 
-	var logLevel = (LogLevel)config.GetSection("Logging:File:LogLevel").GetValue(typeof(LogLevel), "Default");
+    var logLevel = (LogLevel)config.GetSection("Logging:File:LogLevel").GetValue(typeof(LogLevel), "Default");
 
-	var loggerFactory = LoggerFactory.Create(logger =>
-	{
-		logger
-			.AddConfiguration(config.GetSection("Logging"))
-			.AddFileLogger(x => 
-                {
-					x.LogLevel = logLevel;
-                }
-            );
-	});
-			
-	_logger = loggerFactory.CreateLogger<LoggingFileTest>();
+    var loggerFactory = LoggerFactory.Create(logger =>
+    {
+        logger
+            .AddConfiguration(config.GetSection("Logging"))
+            .AddFileLogger(x => 
+            {
+                x.LogLevel = logLevel;
+            });
+    });
+
+    _logger = loggerFactory.CreateLogger<LoggingFileTest>();
 }
 ```
 
