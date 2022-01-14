@@ -1,4 +1,4 @@
-# Logging.File
+# Tolitech.CodeGenerator.Logging.File
 Logging File library used in projects created by the Code Generator tool.
 
 This project contains the implementation for recording logs in physical text files. 
